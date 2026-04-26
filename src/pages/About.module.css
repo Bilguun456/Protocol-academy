@@ -1,0 +1,84 @@
+.wrap { max-width: 700px; }
+
+.title { font-size: 24px; font-weight: 700; margin-bottom: 20px; color: var(--text); }
+
+.body {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.8;
+  margin-bottom: 12px;
+}
+.body:last-child { margin-bottom: 0; }
+
+/* Creator */
+.creatorRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.creatorAvatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.creatorName { font-size: 17px; font-weight: 700; color: var(--text); }
+.creatorMeta { font-size: 13px; color: var(--text-muted); }
+
+/* Pillars */
+.pillars {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.pillar {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 14px 12px;
+  text-align: center;
+}
+
+.pillarIcon {
+  display: block;
+  font-size: 20px;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.pillarTitle { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.pillarDesc { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+
+/* Support */
+.supportActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  margin-top: 4px;
+}
+
+.thankYou {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  margin-bottom: 0;
+}
+
+@media (max-width: 560px) {
+  .pillars { grid-template-columns: 1fr 1fr; }
+}

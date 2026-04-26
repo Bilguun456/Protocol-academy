@@ -1,0 +1,78 @@
+.wrap { max-width: 700px; }
+.title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.sub { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+
+.form { display: flex; flex-direction: column; gap: 16px; }
+
+.field { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 180px;
+  line-height: 1.6;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.diffPicker {
+  display: flex;
+  gap: 6px;
+}
+
+.diffBtn {
+  flex: 1;
+  padding: 8px;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  text-transform: capitalize;
+  transition: all 0.15s;
+}
+.diffBtn:hover { border-color: var(--border-light); color: var(--text); }
+
+.diff_easy { background: rgba(22,163,74,0.1); color: #16a34a; border-color: #16a34a; }
+.diff_medium { background: rgba(245,158,11,0.1); color: var(--orange); border-color: var(--orange); }
+.diff_hard { background: rgba(239,68,68,0.1); color: var(--red); border-color: var(--red); }
+
+.statusMsg {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 0;
+}
+
+.buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.draftsSection { margin-top: 8px; }
+
+.draftRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(30,42,58,0.5);
+  font-size: 13px;
+}
+.draftRow:last-child { border-bottom: none; }
+
+.draftName { flex: 1; color: var(--text-dim); }
+
+@media (max-width: 500px) {
+  .row { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,153 @@
+/* Intro */
+.intro {
+  max-width: 540px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 24px 0;
+}
+.introIcon { font-size: 40px; color: var(--accent); margin-bottom: 10px; }
+.introTitle { font-size: 22px; font-weight: 700; margin-bottom: 10px; }
+.introDesc { font-size: 13px; color: var(--text-dim); line-height: 1.7; margin-bottom: 14px; }
+.introList {
+  list-style: none;
+  text-align: left;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.introList li {
+  font-size: 13px;
+  color: var(--text-dim);
+  padding-left: 16px;
+  position: relative;
+}
+.introList li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+}
+
+/* Active */
+.active { max-width: 720px; }
+
+.progressRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.progressBar {
+  flex: 1;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+}
+.progressFill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.counter { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+
+.problemMeta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.topic { font-size: 12px; color: var(--text-muted); }
+
+.problemName { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+
+.statement {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.7;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.codeLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+
+.codeArea {
+  width: 100%;
+  background: #1e2329;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: #e2e8f0;
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 14px;
+  resize: vertical;
+  margin-bottom: 14px;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  min-height: 200px;
+}
+.codeArea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(26,127,212,0.12);
+}
+.codeArea:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.actionRow { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.afterSubmit { display: flex; flex-direction: column; gap: 10px; }
+
+.verdict { font-size: 16px; font-weight: 700; }
+.verdictSub { font-size: 13px; font-weight: 400; color: var(--text-muted); }
+
+.afterBtns { display: flex; gap: 8px; }
+
+/* Done */
+.done { max-width: 660px; margin: 0 auto; text-align: center; padding: 20px 0; }
+.doneIcon { font-size: 40px; color: var(--accent); margin-bottom: 10px; }
+.doneTitle { font-size: 22px; font-weight: 700; margin-bottom: 12px; }
+.finalScore { font-size: 60px; font-weight: 700; color: var(--accent); line-height: 1; margin-bottom: 4px; }
+.finalRank { font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; }
+.doneDesc { font-size: 13px; color: var(--text-dim); margin-bottom: 16px; }
+
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.historyRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 12px;
+  border-radius: 3px;
+  font-size: 13px;
+  border: 1px solid transparent;
+}
+.histSolved { background: rgba(22,163,74,0.07); border-color: #bbf7d0; }
+.histWrong  { background: rgba(220,38,38,0.05);  border-color: #fecaca; }
+
+.histIcon { width: 18px; text-align: center; font-weight: 700; }
+.histSolved .histIcon { color: #16a34a; }
+.histWrong  .histIcon { color: var(--red); }
+
+.histName { flex: 1; color: var(--text); font-weight: 500; }
+.histTopic { font-size: 11px; color: var(--text-muted); }
+
+.dotAccepted { background: rgba(22,163,74,0.15); color: #16a34a; }
+.dotWrong    { background: rgba(220,38,38,0.15);  color: var(--red); }

@@ -1,0 +1,81 @@
+.header { margin-bottom: 20px; }
+.title { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.subtitle { font-size: 13px; color: var(--text-muted); }
+
+.topicList { display: flex; flex-direction: column; gap: 6px; }
+
+.topicBlock {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  transition: border-color 0.2s;
+}
+
+.topicHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s;
+}
+.topicHeader:hover { background: var(--card2); }
+
+.topicArrow { color: var(--text-muted); font-size: 10px; width: 12px; flex-shrink: 0; }
+.topicName { flex: 1; font-size: 14px; font-weight: 600; }
+.topicProgress { font-size: 13px; color: var(--text-muted); }
+.topicComplete {
+  font-size: 11px;
+  font-weight: 700;
+  color: #16a34a;
+  letter-spacing: 0.04em;
+}
+
+.problemList { border-top: 1px solid var(--border); }
+
+.problemRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 16px 9px 28px;
+  border-bottom: 1px solid rgba(221,225,231,0.5);
+  transition: background 0.1s;
+}
+.problemRow:last-child { border-bottom: none; }
+.problemRow:hover { filter: brightness(0.97); }
+
+.problemName { flex: 1; font-size: 13px; color: var(--text-dim); }
+
+.problemRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.coinBadge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #b45309;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  padding: 1px 7px;
+  border-radius: 10px;
+}
+
+.statusButtons { display: flex; gap: 3px; }
+
+.btnAttempted { color: var(--orange) !important; border-color: var(--orange) !important; }
+.btnSolved { color: #16a34a !important; border-color: #16a34a !important; }
+
+@media (max-width: 600px) {
+  .problemRow { padding-left: 16px; }
+  .coinBadge { display: none; }
+}

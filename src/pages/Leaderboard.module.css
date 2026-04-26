@@ -1,0 +1,180 @@
+.header { margin-bottom: 14px; }
+.title { font-size: 22px; font-weight: 700; }
+
+.tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 0;
+  border-bottom: 2px solid var(--border);
+}
+
+.tab {
+  padding: 8px 18px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.tab:hover { color: var(--text); }
+.tabActive { color: var(--accent) !important; border-bottom-color: var(--accent) !important; }
+
+/* Sort row */
+.sortRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 0;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+
+.sortLabel {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.sortBtn {
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.sortBtn:hover { border-color: var(--accent); color: var(--accent); }
+.sortBtnActive {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff !important;
+}
+
+.tableWrap {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  padding: 10px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  background: var(--card2);
+}
+
+.thRank { width: 80px; }
+.thStat { width: 110px; text-align: right; }
+
+.row {
+  border-bottom: 1px solid rgba(221,225,231,0.6);
+  transition: background 0.1s;
+}
+.row:last-child { border-bottom: none; }
+.row:hover { background: #f8f9fa; }
+
+.top1 { background: #fffef0; }
+.top2 { background: #f8fafd; }
+.top3 { background: #fdf8f3; }
+
+.tdRank {
+  padding: 11px 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rankNum { font-size: 14px; font-weight: 700; color: var(--text); width: 22px; }
+.up   { font-size: 10px; color: #16a34a; }
+.down { font-size: 10px; color: var(--red); }
+.same { font-size: 10px; color: var(--text-muted); }
+
+.tdPlayer {
+  padding: 11px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.playerInfo { flex: 1; }
+
+.playerName {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+}
+.playerName:hover { color: var(--accent); text-decoration: none; }
+
+.playerCountry { font-size: 11px; color: var(--text-muted); }
+
+.tdStat {
+  padding: 11px 16px;
+  font-size: 13px;
+  color: var(--text-dim);
+  text-align: right;
+  font-weight: 600;
+}
+
+/* Achievement bar */
+.achievementBar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  flex-wrap: wrap;
+}
+
+.achieveLabel { font-size: 12px; color: var(--text-muted); margin-right: 4px; }
+
+.achieveBtn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--card2);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  color: var(--text-dim);
+}
+.achieveBtn:hover { border-color: var(--accent); color: var(--accent); }
+.achieveActive { border-color: var(--accent) !important; background: rgba(26,127,212,0.08); color: var(--accent) !important; }
+
+.filterNote { font-size: 12px; color: var(--accent); margin-left: 4px; }
+
+@media (max-width: 600px) {
+  .tdStat { display: none; }
+  .thStat { display: none; }
+}

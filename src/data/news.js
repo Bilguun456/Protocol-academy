@@ -1,0 +1,73 @@
+export const NEWS = [
+  {
+    id: 'n1',
+    type: 'contest-result',
+    title: 'ICPC World Finals 2025 — Results',
+    date: '2025-04-18',
+    description: 'MIT takes gold at the ICPC World Finals 2025 in Kazakhstan. Team "Cache Money" solved all 13 problems in record time. Protocol Academy users placed in top 50.',
+    tag: 'Competition',
+  },
+  {
+    id: 'n2',
+    type: 'upcoming-feature',
+    title: 'Ranked Mode Coming Next Month',
+    date: '2025-04-20',
+    description: 'Ranked arena matches will launch May 15th. Your ELO rating will affect leaderboard position. Beta testers wanted — join the Discord.',
+    tag: 'Update',
+  },
+  {
+    id: 'n3',
+    type: 'contest',
+    title: 'Spring Open Contest — April 30th',
+    date: '2025-04-22',
+    description: 'A 3-hour individual contest featuring 8 problems spanning all difficulty tiers. Prize pool: 10,000 coins. Registration open now.',
+    tag: 'Contest',
+  },
+  {
+    id: 'n4',
+    type: 'announcement',
+    title: 'New Topic Added: Advanced DP',
+    date: '2025-04-15',
+    description: '15 new problems on bitmask DP, interval DP, and digit DP have been added to the problems section. Courses content updated to match.',
+    tag: 'Announcement',
+  },
+  {
+    id: 'n5',
+    type: 'contest-result',
+    title: 'Protocol Academy Internal Cup — Top 3',
+    date: '2025-04-10',
+    description: '1st: tourist (3241 pts), 2nd: jiangly (3102 pts), 3rd: Um_nik (2987 pts). Congratulations to all participants.',
+    tag: 'Competition',
+  },
+  {
+    id: 'n6',
+    type: 'upcoming-feature',
+    title: 'Mobile App Beta — Sign Up Now',
+    date: '2025-04-05',
+    description: 'Protocol Academy mobile (iOS/Android) enters closed beta. Practice on the go, track streaks, get push notifications for contests.',
+    tag: 'Update',
+  },
+  {
+    id: 'n7',
+    type: 'announcement',
+    title: 'Diagnostic Tool v2 Released',
+    date: '2025-03-28',
+    description: 'Completely rewritten adaptive difficulty engine. Now covers 7 topics with 150 calibration problems. More accurate rating in fewer questions.',
+    tag: 'Announcement',
+  },
+  {
+    id: 'n8',
+    type: 'contest',
+    title: 'May Monthly — Team Format',
+    date: '2025-05-01',
+    description: '5-hour team contest (2-3 members). 10 problems, ICPC scoring. Register your team by April 28th.',
+    tag: 'Contest',
+  },
+];
+
+export const TAG_COLORS = {
+  Competition: { bg: 'rgba(139,92,246,0.15)', color: '#8b5cf6' },
+  Update: { bg: 'rgba(59,130,246,0.15)', color: '#3b82f6' },
+  Contest: { bg: 'rgba(245,158,11,0.15)', color: '#f59e0b' },
+  Announcement: { bg: 'rgba(26,127,212,0.12)', color: '#1a7fd4' },
+};
