@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import db from '../db.js';
+import pool from '../db.js';
 import { requireAuth } from '../middleware/auth.js';
 
 const router = Router();
@@ -13,112 +13,163 @@ const DAILY_TASKS = [
 
 function todayKey() { return new Date().toDateString(); }
 
-// GET /api/problems/status — all of user's problem statuses
-router.get('/status', requireAuth, (req, res) => {
-  const rows = db.prepare('SELECT problem_id, status FROM user_problem_status WHERE user_id = ?').all(req.user.id);
-  const statuses = {};
-  rows.forEach(r => { statuses[r.problem_id] = { status: r.status }; });
-  res.json({ statuses });
-});
-
-// GET /api/problems/bookmarks
-router.get('/bookmarks', requireAuth, (req, res) => {
-  const rows = db.prepare('SELECT problem_id FROM bookmarks WHERE user_id = ?').all(req.user.id);
-  res.json({ bookmarks: rows.map(r => r.problem_id) });
-});
-
-// POST /api/problems/:id/bookmark — toggle
-router.post('/:id/bookmark', requireAuth, (req, res) => {
-  const { id } = req.params;
-  const exists = db.prepare('SELECT 1 FROM bookmarks WHERE user_id = ? AND problem_id = ?').get(req.user.id, id);
-  if (exists) {
-    db.prepare('DELETE FROM bookmarks WHERE user_id = ? AND problem_id = ?').run(req.user.id, id);
-    res.json({ bookmarked: false });
-  } else {
-    db.prepare('INSERT OR IGNORE INTO bookmarks (user_id, problem_id) VALUES (?, ?)').run(req.user.id, id);
-    res.json({ bookmarked: true });
+router.get('/status', requireAuth, async (req, res) => {
+  try {
+    const rows = (await pool.query(
+      'SELECT problem_id, status FROM user_problem_status WHERE user_id = $1',
+      [req.user.id]
+    )).rows;
+    const statuses = {};
+    rows.forEach(r => { statuses[r.problem_id] = { status: r.status }; });
+    res.json({ statuses });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
-// GET /api/problems/upvotes
-router.get('/upvotes', requireAuth, (req, res) => {
-  const totals = db.prepare('SELECT problem_id, COUNT(*) as cnt FROM problem_upvotes GROUP BY problem_id').all();
-  const myVotes = db.prepare('SELECT problem_id FROM problem_upvotes WHERE user_id = ?').all(req.user.id);
-  const mySet = new Set(myVotes.map(r => r.problem_id));
-
-  const votes = {};
-  totals.forEach(r => {
-    votes[r.problem_id] = r.cnt;
-    votes[r.problem_id + '_voted'] = mySet.has(r.problem_id);
-  });
-  // Also include user-voted problems not in totals (shouldn't happen, but safe)
-  mySet.forEach(pid => { if (!votes[pid + '_voted']) votes[pid + '_voted'] = true; });
-
-  res.json({ votes });
+router.get('/bookmarks', requireAuth, async (req, res) => {
+  try {
+    const rows = (await pool.query('SELECT problem_id FROM bookmarks WHERE user_id = $1', [req.user.id])).rows;
+    res.json({ bookmarks: rows.map(r => r.problem_id) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
-// POST /api/problems/:id/upvote — toggle
-router.post('/:id/upvote', requireAuth, (req, res) => {
-  const { id } = req.params;
-  const exists = db.prepare('SELECT 1 FROM problem_upvotes WHERE user_id = ? AND problem_id = ?').get(req.user.id, id);
-  if (exists) {
-    db.prepare('DELETE FROM problem_upvotes WHERE user_id = ? AND problem_id = ?').run(req.user.id, id);
-  } else {
-    db.prepare('INSERT OR IGNORE INTO problem_upvotes (user_id, problem_id) VALUES (?, ?)').run(req.user.id, id);
+router.post('/:id/bookmark', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const exists = (await pool.query(
+      'SELECT 1 FROM bookmarks WHERE user_id = $1 AND problem_id = $2',
+      [req.user.id, id]
+    )).rows[0];
+
+    if (exists) {
+      await pool.query('DELETE FROM bookmarks WHERE user_id = $1 AND problem_id = $2', [req.user.id, id]);
+      res.json({ bookmarked: false });
+    } else {
+      await pool.query(
+        'INSERT INTO bookmarks (user_id, problem_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+        [req.user.id, id]
+      );
+      res.json({ bookmarked: true });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
   }
-  const total = db.prepare('SELECT COUNT(*) as cnt FROM problem_upvotes WHERE problem_id = ?').get(id).cnt;
-  res.json({ total, voted: !exists });
 });
 
-// PUT /api/problems/:id/status
-router.put('/:id/status', requireAuth, (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body || {};
-  if (!['untouched', 'attempted', 'solved'].includes(status)) {
-    return res.status(400).json({ error: 'Invalid status' });
+router.get('/upvotes', requireAuth, async (req, res) => {
+  try {
+    const [totalsRes, myVotesRes] = await Promise.all([
+      pool.query('SELECT problem_id, COUNT(*)::int AS cnt FROM problem_upvotes GROUP BY problem_id'),
+      pool.query('SELECT problem_id FROM problem_upvotes WHERE user_id = $1', [req.user.id]),
+    ]);
+    const mySet = new Set(myVotesRes.rows.map(r => r.problem_id));
+    const votes = {};
+    totalsRes.rows.forEach(r => {
+      votes[r.problem_id]            = r.cnt;
+      votes[r.problem_id + '_voted'] = mySet.has(r.problem_id);
+    });
+    mySet.forEach(pid => { if (!votes[pid + '_voted']) votes[pid + '_voted'] = true; });
+    res.json({ votes });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
   }
+});
 
-  const problem = db.prepare('SELECT * FROM problems WHERE id = ?').get(id);
-  if (!problem) return res.status(404).json({ error: 'Problem not found' });
+router.post('/:id/upvote', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const exists = (await pool.query(
+      'SELECT 1 FROM problem_upvotes WHERE user_id = $1 AND problem_id = $2',
+      [req.user.id, id]
+    )).rows[0];
 
-  const prev = db.prepare('SELECT status FROM user_problem_status WHERE user_id = ? AND problem_id = ?').get(req.user.id, id);
+    if (exists) {
+      await pool.query('DELETE FROM problem_upvotes WHERE user_id = $1 AND problem_id = $2', [req.user.id, id]);
+    } else {
+      await pool.query(
+        'INSERT INTO problem_upvotes (user_id, problem_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+        [req.user.id, id]
+      );
+    }
+    const total = parseInt((await pool.query(
+      'SELECT COUNT(*)::int AS cnt FROM problem_upvotes WHERE problem_id = $1', [id]
+    )).rows[0].cnt);
+    res.json({ total, voted: !exists });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
-  db.prepare(
-    `INSERT INTO user_problem_status (user_id, problem_id, status, solved_at)
-     VALUES (?, ?, ?, ?)
-     ON CONFLICT(user_id, problem_id) DO UPDATE SET status = excluded.status, solved_at = excluded.solved_at`
-  ).run(req.user.id, id, status, status === 'solved' ? new Date().toISOString() : null);
+router.put('/:id/status', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body || {};
+    if (!['untouched', 'attempted', 'solved'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
 
-  let coinsEarned = 0;
-  let dailyState = null;
+    const problem = (await pool.query('SELECT * FROM problems WHERE id = $1', [id])).rows[0];
+    if (!problem) return res.status(404).json({ error: 'Problem not found' });
 
-  if (status === 'solved' && prev?.status !== 'solved') {
-    coinsEarned = COIN_MAP[problem.difficulty] || 10;
-    db.prepare('UPDATE users SET coins = coins + ? WHERE id = ?').run(coinsEarned, req.user.id);
+    const prev = (await pool.query(
+      'SELECT status FROM user_problem_status WHERE user_id = $1 AND problem_id = $2',
+      [req.user.id, id]
+    )).rows[0];
 
-    // Auto-complete solve_easy daily task for easy problems
-    if (problem.difficulty === 'easy') {
-      const today = todayKey();
-      const alreadyDone = db.prepare(
-        'SELECT 1 FROM daily_completions WHERE user_id = ? AND task_id = ? AND date = ?'
-      ).get(req.user.id, 'solve_easy', today);
+    await pool.query(
+      `INSERT INTO user_problem_status (user_id, problem_id, status, solved_at)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (user_id, problem_id) DO UPDATE SET status = EXCLUDED.status, solved_at = EXCLUDED.solved_at`,
+      [req.user.id, id, status, status === 'solved' ? new Date().toISOString() : null]
+    );
 
-      if (!alreadyDone) {
-        const task = DAILY_TASKS.find(t => t.id === 'solve_easy');
-        db.prepare('INSERT OR IGNORE INTO daily_completions (user_id, task_id, date) VALUES (?, ?, ?)').run(req.user.id, 'solve_easy', today);
-        db.prepare('UPDATE users SET coins = coins + ? WHERE id = ?').run(task.reward, req.user.id);
-        coinsEarned += task.reward;
+    let coinsEarned = 0;
+    let dailyState  = null;
 
-        const completed = db.prepare(
-          'SELECT task_id FROM daily_completions WHERE user_id = ? AND date = ?'
-        ).all(req.user.id, today).reduce((acc, r) => ({ ...acc, [r.task_id]: true }), {});
-        dailyState = { date: today, completed };
+    if (status === 'solved' && prev?.status !== 'solved') {
+      coinsEarned = COIN_MAP[problem.difficulty] || 10;
+      await pool.query('UPDATE users SET coins = coins + $1 WHERE id = $2', [coinsEarned, req.user.id]);
+
+      if (problem.difficulty === 'easy') {
+        const today      = todayKey();
+        const alreadyDone = (await pool.query(
+          'SELECT 1 FROM daily_completions WHERE user_id = $1 AND task_id = $2 AND date = $3',
+          [req.user.id, 'solve_easy', today]
+        )).rows[0];
+
+        if (!alreadyDone) {
+          const task = DAILY_TASKS.find(t => t.id === 'solve_easy');
+          await pool.query(
+            'INSERT INTO daily_completions (user_id, task_id, date) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
+            [req.user.id, 'solve_easy', today]
+          );
+          await pool.query('UPDATE users SET coins = coins + $1 WHERE id = $2', [task.reward, req.user.id]);
+          coinsEarned += task.reward;
+
+          const completedRows = (await pool.query(
+            'SELECT task_id FROM daily_completions WHERE user_id = $1 AND date = $2',
+            [req.user.id, today]
+          )).rows;
+          const completed = completedRows.reduce((acc, r) => ({ ...acc, [r.task_id]: true }), {});
+          dailyState = { date: today, completed };
+        }
       }
     }
-  }
 
-  const user = db.prepare('SELECT coins FROM users WHERE id = ?').get(req.user.id);
-  res.json({ coins: user.coins, dailyState });
+    const user = (await pool.query('SELECT coins FROM users WHERE id = $1', [req.user.id])).rows[0];
+    res.json({ coins: user.coins, dailyState });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 export default router;

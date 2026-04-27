@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import db from '../db.js';
+import pool from '../db.js';
 import { requireAuth } from '../middleware/auth.js';
 
 const router = Router();
@@ -12,38 +12,51 @@ const TASKS = [
 
 function todayKey() { return new Date().toDateString(); }
 
-function getUserDailyState(userId) {
+async function getUserDailyState(userId) {
   const today = todayKey();
-  const rows = db.prepare(
-    'SELECT task_id FROM daily_completions WHERE user_id = ? AND date = ?'
-  ).all(userId, today);
+  const rows  = (await pool.query(
+    'SELECT task_id FROM daily_completions WHERE user_id = $1 AND date = $2',
+    [userId, today]
+  )).rows;
   const completed = {};
   rows.forEach(r => { completed[r.task_id] = true; });
   return { date: today, completed };
 }
 
-// GET /api/daily-tasks
-router.get('/', requireAuth, (req, res) => {
-  res.json({ tasks: TASKS, state: getUserDailyState(req.user.id) });
+router.get('/', requireAuth, async (req, res) => {
+  try {
+    res.json({ tasks: TASKS, state: await getUserDailyState(req.user.id) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
-// POST /api/daily-tasks/:taskId/complete
-router.post('/:taskId/complete', requireAuth, (req, res) => {
-  const task = TASKS.find(t => t.id === req.params.taskId);
-  if (!task) return res.status(404).json({ error: 'Unknown task' });
+router.post('/:taskId/complete', requireAuth, async (req, res) => {
+  try {
+    const task = TASKS.find(t => t.id === req.params.taskId);
+    if (!task) return res.status(404).json({ error: 'Unknown task' });
 
-  const today = todayKey();
-  const already = db.prepare(
-    'SELECT 1 FROM daily_completions WHERE user_id = ? AND task_id = ? AND date = ?'
-  ).get(req.user.id, task.id, today);
+    const today   = todayKey();
+    const already = (await pool.query(
+      'SELECT 1 FROM daily_completions WHERE user_id = $1 AND task_id = $2 AND date = $3',
+      [req.user.id, task.id, today]
+    )).rows[0];
 
-  if (!already) {
-    db.prepare('INSERT OR IGNORE INTO daily_completions (user_id, task_id, date) VALUES (?, ?, ?)').run(req.user.id, task.id, today);
-    db.prepare('UPDATE users SET coins = coins + ? WHERE id = ?').run(task.reward, req.user.id);
+    if (!already) {
+      await pool.query(
+        'INSERT INTO daily_completions (user_id, task_id, date) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
+        [req.user.id, task.id, today]
+      );
+      await pool.query('UPDATE users SET coins = coins + $1 WHERE id = $2', [task.reward, req.user.id]);
+    }
+
+    const user  = (await pool.query('SELECT coins FROM users WHERE id = $1', [req.user.id])).rows[0];
+    res.json({ coins: user.coins, state: await getUserDailyState(req.user.id) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
   }
-
-  const user = db.prepare('SELECT coins FROM users WHERE id = ?').get(req.user.id);
-  res.json({ coins: user.coins, state: getUserDailyState(req.user.id) });
 });
 
 export default router;

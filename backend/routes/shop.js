@@ -1,45 +1,60 @@
 import { Router } from 'express';
-import db from '../db.js';
+import pool from '../db.js';
 import { requireAuth } from '../middleware/auth.js';
 
 const router = Router();
 
-// GET /api/shop/items
-router.get('/items', (req, res) => {
-  const items = db.prepare('SELECT * FROM shop_items ORDER BY section, price').all();
-  res.json({
-    items: items.map(i => ({
-      id: i.id, name: i.name, description: i.description,
-      category: i.category, section: i.section,
-      price: i.price, salePrice: i.sale_price ?? undefined,
-      preview: i.preview,
-    })),
-  });
+router.get('/items', async (req, res) => {
+  try {
+    const items = (await pool.query('SELECT * FROM shop_items ORDER BY section, price')).rows;
+    res.json({
+      items: items.map(i => ({
+        id: i.id, name: i.name, description: i.description,
+        category: i.category, section: i.section,
+        price: i.price, salePrice: i.sale_price ?? undefined,
+        preview: i.preview,
+      })),
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
-// GET /api/shop/purchases — current user's owned item IDs
-router.get('/purchases', requireAuth, (req, res) => {
-  const rows = db.prepare('SELECT item_id FROM user_purchases WHERE user_id = ?').all(req.user.id);
-  res.json({ itemIds: rows.map(r => r.item_id) });
+router.get('/purchases', requireAuth, async (req, res) => {
+  try {
+    const rows = (await pool.query('SELECT item_id FROM user_purchases WHERE user_id = $1', [req.user.id])).rows;
+    res.json({ itemIds: rows.map(r => r.item_id) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
-// POST /api/shop/purchase/:itemId
-router.post('/purchase/:itemId', requireAuth, (req, res) => {
-  const item = db.prepare('SELECT * FROM shop_items WHERE id = ?').get(req.params.itemId);
-  if (!item) return res.status(404).json({ error: 'Item not found' });
+router.post('/purchase/:itemId', requireAuth, async (req, res) => {
+  try {
+    const item = (await pool.query('SELECT * FROM shop_items WHERE id = $1', [req.params.itemId])).rows[0];
+    if (!item) return res.status(404).json({ error: 'Item not found' });
 
-  const already = db.prepare('SELECT 1 FROM user_purchases WHERE user_id = ? AND item_id = ?').get(req.user.id, item.id);
-  if (already) return res.status(409).json({ error: 'Already owned' });
+    const already = (await pool.query(
+      'SELECT 1 FROM user_purchases WHERE user_id = $1 AND item_id = $2',
+      [req.user.id, item.id]
+    )).rows[0];
+    if (already) return res.status(409).json({ error: 'Already owned' });
 
-  const cost = item.sale_price ?? item.price;
-  const user = db.prepare('SELECT coins FROM users WHERE id = ?').get(req.user.id);
-  if (user.coins < cost) return res.status(402).json({ error: 'Not enough coins' });
+    const cost = item.sale_price ?? item.price;
+    const user = (await pool.query('SELECT coins FROM users WHERE id = $1', [req.user.id])).rows[0];
+    if (user.coins < cost) return res.status(402).json({ error: 'Not enough coins' });
 
-  db.prepare('UPDATE users SET coins = coins - ? WHERE id = ?').run(cost, req.user.id);
-  db.prepare('INSERT INTO user_purchases (user_id, item_id) VALUES (?, ?)').run(req.user.id, item.id);
+    await pool.query('UPDATE users SET coins = coins - $1 WHERE id = $2', [cost, req.user.id]);
+    await pool.query('INSERT INTO user_purchases (user_id, item_id) VALUES ($1, $2)', [req.user.id, item.id]);
 
-  const updated = db.prepare('SELECT coins FROM users WHERE id = ?').get(req.user.id);
-  res.json({ coins: updated.coins, itemId: item.id });
+    const updated = (await pool.query('SELECT coins FROM users WHERE id = $1', [req.user.id])).rows[0];
+    res.json({ coins: updated.coins, itemId: item.id });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 export default router;

@@ -1,8 +1,7 @@
 import 'dotenv/config';
 import bcrypt from 'bcryptjs';
-import db from './db.js';
+import pool from './db.js';
 
-// ── Problems ──────────────────────────────────────────────────────────────────
 const PROBLEMS = [
   { id: 'p1',  name: 'Weird Algorithm',               difficulty: 'easy',   topic_id: 'intro',   topic: 'Introductory Problems',  points: 100 },
   { id: 'p2',  name: 'Missing Number',                difficulty: 'easy',   topic_id: 'intro',   topic: 'Introductory Problems',  points: 100 },
@@ -71,33 +70,17 @@ const PROBLEMS = [
   { id: 'p65', name: 'Prime Multiples',               difficulty: 'hard',   topic_id: 'math',    topic: 'Mathematics',           points: 300 },
 ];
 
-db.exec('BEGIN');
-const insertProblem = db.prepare(
-  'INSERT OR IGNORE INTO problems (id, name, difficulty, topic_id, topic, points) VALUES (@id, @name, @difficulty, @topic_id, @topic, @points)'
-);
-PROBLEMS.forEach(p => insertProblem.run(p));
-db.exec('COMMIT');
-
-// ── News ──────────────────────────────────────────────────────────────────────
 const NEWS = [
-  { id: 'n1', title: 'ICPC World Finals 2025 — Results',    description: 'MIT takes gold at the ICPC World Finals 2025 in Kazakhstan. Team "Cache Money" solved all 13 problems in record time.', tag: 'Competition',  type: 'contest-result',   date: '2025-04-18' },
-  { id: 'n2', title: 'Ranked Mode Coming Next Month',        description: 'Ranked arena matches will launch May 15th. Your ELO rating will affect leaderboard position. Beta testers wanted.',     tag: 'Update',       type: 'upcoming-feature', date: '2025-04-20' },
-  { id: 'n3', title: 'Spring Open Contest — April 30th',    description: 'A 3-hour individual contest featuring 8 problems spanning all difficulty tiers. Prize pool: 10,000 coins.',              tag: 'Contest',      type: 'contest',          date: '2025-04-22' },
-  { id: 'n4', title: 'New Topic Added: Advanced DP',        description: '15 new problems on bitmask DP, interval DP, and digit DP have been added to the problems section.',                     tag: 'Announcement', type: 'announcement',     date: '2025-04-15' },
-  { id: 'n5', title: 'Protocol Academy Internal Cup — Top 3', description: '1st: tourist (3241 pts), 2nd: jiangly (3102 pts), 3rd: Um_nik (2987 pts). Congratulations!',                         tag: 'Competition',  type: 'contest-result',   date: '2025-04-10' },
-  { id: 'n6', title: 'Mobile App Beta — Sign Up Now',       description: 'Protocol Academy mobile (iOS/Android) enters closed beta. Practice on the go, track streaks, get push notifications.', tag: 'Update',       type: 'upcoming-feature', date: '2025-04-05' },
-  { id: 'n7', title: 'Diagnostic Tool v2 Released',          description: 'Completely rewritten adaptive difficulty engine. Now covers 7 topics with 150 calibration problems.',                  tag: 'Announcement', type: 'announcement',     date: '2025-03-28' },
-  { id: 'n8', title: 'May Monthly — Team Format',            description: '5-hour team contest (2-3 members). 10 problems, ICPC scoring. Register your team by April 28th.',                     tag: 'Contest',      type: 'contest',          date: '2025-05-01' },
+  { id: 'n1', title: 'ICPC World Finals 2025 — Results',     description: 'MIT takes gold at the ICPC World Finals 2025 in Kazakhstan. Team "Cache Money" solved all 13 problems in record time.', tag: 'Competition',  type: 'contest-result',   date: '2025-04-18' },
+  { id: 'n2', title: 'Ranked Mode Coming Next Month',         description: 'Ranked arena matches will launch May 15th. Your ELO rating will affect leaderboard position. Beta testers wanted.',     tag: 'Update',       type: 'upcoming-feature', date: '2025-04-20' },
+  { id: 'n3', title: 'Spring Open Contest — April 30th',     description: 'A 3-hour individual contest featuring 8 problems spanning all difficulty tiers. Prize pool: 10,000 coins.',              tag: 'Contest',      type: 'contest',          date: '2025-04-22' },
+  { id: 'n4', title: 'New Topic Added: Advanced DP',         description: '15 new problems on bitmask DP, interval DP, and digit DP have been added to the problems section.',                     tag: 'Announcement', type: 'announcement',     date: '2025-04-15' },
+  { id: 'n5', title: 'Protocol Academy Internal Cup — Top 3',description: '1st: tourist (3241 pts), 2nd: jiangly (3102 pts), 3rd: Um_nik (2987 pts). Congratulations!',                           tag: 'Competition',  type: 'contest-result',   date: '2025-04-10' },
+  { id: 'n6', title: 'Mobile App Beta — Sign Up Now',        description: 'Protocol Academy mobile (iOS/Android) enters closed beta. Practice on the go, track streaks, get push notifications.', tag: 'Update',       type: 'upcoming-feature', date: '2025-04-05' },
+  { id: 'n7', title: 'Diagnostic Tool v2 Released',           description: 'Completely rewritten adaptive difficulty engine. Now covers 7 topics with 150 calibration problems.',                  tag: 'Announcement', type: 'announcement',     date: '2025-03-28' },
+  { id: 'n8', title: 'May Monthly — Team Format',             description: '5-hour team contest (2-3 members). 10 problems, ICPC scoring. Register your team by April 28th.',                     tag: 'Contest',      type: 'contest',          date: '2025-05-01' },
 ];
 
-db.exec('BEGIN');
-const insertNews = db.prepare(
-  'INSERT OR IGNORE INTO news (id, title, description, tag, type, date) VALUES (@id, @title, @description, @tag, @type, @date)'
-);
-NEWS.forEach(n => insertNews.run(n));
-db.exec('COMMIT');
-
-// ── Shop items ────────────────────────────────────────────────────────────────
 const SHOP_ITEMS = [
   { id: 's1',  name: 'Gold Frame',      description: 'Shimmering gold border around your avatar', category: 'avatar',     section: 'trending', price: 500,  sale_price: null, preview: '🟡' },
   { id: 's2',  name: 'Neon Ring',       description: 'Pulsing neon green ring',                   category: 'avatar',     section: 'trending', price: 350,  sale_price: null, preview: '💚' },
@@ -117,14 +100,6 @@ const SHOP_ITEMS = [
   { id: 's16', name: 'Circuit Board',   description: 'Glowing PCB trace pattern',                  category: 'background', section: 'new',      price: 420,  sale_price: null, preview: '⚡' },
 ];
 
-db.exec('BEGIN');
-const insertItem = db.prepare(
-  'INSERT OR IGNORE INTO shop_items (id, name, description, category, section, price, sale_price, preview) VALUES (@id, @name, @description, @category, @section, @price, @sale_price, @preview)'
-);
-SHOP_ITEMS.forEach(i => insertItem.run(i));
-db.exec('COMMIT');
-
-// ── Demo users ────────────────────────────────────────────────────────────────
 const DEMO_USERS = [
   { username: 'tourist',   email: 'tourist@demo.com',   avatar: 'T', country: 'BY', rank: 'Master',     diagnostic: 2850, coins: 82400, stars: 48 },
   { username: 'jiangly',   email: 'jiangly@demo.com',   avatar: 'J', country: 'CN', rank: 'Master',     diagnostic: 2780, coins: 76200, stars: 42 },
@@ -140,25 +115,65 @@ const DEMO_USERS = [
   { username: 'vepifanov', email: 'vepifanov@demo.com', avatar: 'V', country: 'RU', rank: 'Pupil',      diagnostic: 2100, coins: 38500, stars: 12 },
 ];
 
-const insertUser = db.prepare(
-  `INSERT OR IGNORE INTO users (username, email, password_hash, avatar, country, rank, diagnostic, coins, stars, join_date)
-   VALUES (@username, @email, @password_hash, @avatar, @country, @rank, @diagnostic, @coins, @stars, @join_date)`
-);
-const insertStatus = db.prepare(
-  "INSERT OR IGNORE INTO user_problem_status (user_id, problem_id, status) VALUES (?, ?, 'solved')"
-);
+const client = await pool.connect();
+try {
+  await client.query('BEGIN');
 
-const hash = bcrypt.hashSync('demo123', 10);
-const allProblems = db.prepare('SELECT id FROM problems').all();
+  for (const p of PROBLEMS) {
+    await client.query(
+      `INSERT INTO problems (id, name, difficulty, topic_id, topic, points)
+       VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING`,
+      [p.id, p.name, p.difficulty, p.topic_id, p.topic, p.points]
+    );
+  }
 
-db.exec('BEGIN');
-DEMO_USERS.forEach((u, idx) => {
-  insertUser.run({ ...u, password_hash: hash, join_date: `202${Math.floor(idx / 4)}-0${(idx % 9) + 1}-01` });
-  const row = db.prepare('SELECT id FROM users WHERE username = ?').get(u.username);
-  if (!row) return;
-  const count = Math.floor(allProblems.length * (1 - idx * 0.06));
-  allProblems.slice(0, count).forEach(p => insertStatus.run(row.id, p.id));
-});
-db.exec('COMMIT');
+  for (const n of NEWS) {
+    await client.query(
+      `INSERT INTO news (id, title, description, tag, type, date)
+       VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING`,
+      [n.id, n.title, n.description, n.tag, n.type, n.date]
+    );
+  }
 
-console.log(`Seed complete — ${PROBLEMS.length} problems, ${NEWS.length} news, ${SHOP_ITEMS.length} shop items, ${DEMO_USERS.length} demo users`);
+  for (const i of SHOP_ITEMS) {
+    await client.query(
+      `INSERT INTO shop_items (id, name, description, category, section, price, sale_price, preview)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT DO NOTHING`,
+      [i.id, i.name, i.description, i.category, i.section, i.price, i.sale_price, i.preview]
+    );
+  }
+
+  const hash       = await bcrypt.hash('demo123', 10);
+  const allProblems = (await client.query('SELECT id FROM problems')).rows;
+
+  for (let idx = 0; idx < DEMO_USERS.length; idx++) {
+    const u        = DEMO_USERS[idx];
+    const joinDate = `202${Math.floor(idx / 4)}-0${(idx % 9) + 1}-01`;
+    const { rows } = await client.query(
+      `INSERT INTO users (username, email, password_hash, avatar, country, rank, diagnostic, coins, stars, join_date)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       ON CONFLICT DO NOTHING RETURNING id`,
+      [u.username, u.email, hash, u.avatar, u.country, u.rank, u.diagnostic, u.coins, u.stars, joinDate]
+    );
+    if (!rows[0]) continue;
+    const userId = rows[0].id;
+    const count  = Math.floor(allProblems.length * (1 - idx * 0.06));
+    for (const p of allProblems.slice(0, count)) {
+      await client.query(
+        `INSERT INTO user_problem_status (user_id, problem_id, status)
+         VALUES ($1, $2, 'solved') ON CONFLICT DO NOTHING`,
+        [userId, p.id]
+      );
+    }
+  }
+
+  await client.query('COMMIT');
+  console.log(`Seed complete — ${PROBLEMS.length} problems, ${NEWS.length} news, ${SHOP_ITEMS.length} shop items, ${DEMO_USERS.length} demo users`);
+} catch (err) {
+  await client.query('ROLLBACK');
+  console.error('Seed failed:', err);
+  process.exit(1);
+} finally {
+  client.release();
+  await pool.end();
+}
