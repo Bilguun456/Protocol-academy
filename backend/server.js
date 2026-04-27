@@ -18,18 +18,10 @@ import shopRoutes from './routes/shop.js';
 
 const app = express();
 
-const ALLOWED_ORIGINS = [
-  'http://localhost:5173',
-  process.env.FRONTEND_URL,
-].filter(Boolean);
-
-app.use(cors({
-  origin: (origin, cb) => {
-    if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
-    cb(new Error('Not allowed by CORS'));
-  },
-  credentials: true,
-}));
+// Reflect the request origin back — allows any origin while still
+// supporting Authorization headers (required when credentials: true).
+app.options('*', cors({ origin: true, credentials: true }));
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));

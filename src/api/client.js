@@ -3,12 +3,12 @@ const BASE = import.meta.env.VITE_API_URL ?? '';
 async function request(path, options = {}) {
   const token = localStorage.getItem('pa_token');
   const res = await fetch(`${BASE}/api${path}`, {
+    ...options,
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
-    ...options,
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
