@@ -28,6 +28,8 @@ app.use(cors({
 }));
 app.use(express.json());
 
+app.get('/api/health', (_req, res) => res.json({ ok: true }));
+
 app.use('/api/auth',        authRoutes);
 app.use('/api/users',       userRoutes);
 app.use('/api/problems',    problemRoutes);
