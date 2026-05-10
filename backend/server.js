@@ -16,6 +16,7 @@ import dailyTaskRoutes from './routes/dailyTasks.js';
 import newsRoutes from './routes/news.js';
 import shopRoutes from './routes/shop.js';
 import adminRoutes from './routes/admin.js';
+import { ADMIN_HTML } from './adminPage.js';
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
+app.get('/admin', (_req, res) => res.send(ADMIN_HTML));
 
 app.use('/api/auth',        authRoutes);
 app.use('/api/users',       userRoutes);
