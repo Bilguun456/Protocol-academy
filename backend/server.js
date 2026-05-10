@@ -15,6 +15,7 @@ import commentRoutes from './routes/comments.js';
 import dailyTaskRoutes from './routes/dailyTasks.js';
 import newsRoutes from './routes/news.js';
 import shopRoutes from './routes/shop.js';
+import adminRoutes from './routes/admin.js';
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use('/api/comments',    commentRoutes);
 app.use('/api/daily-tasks', dailyTaskRoutes);
 app.use('/api/news',        newsRoutes);
 app.use('/api/shop',        shopRoutes);
+app.use('/api/admin',       adminRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);

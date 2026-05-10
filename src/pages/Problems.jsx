@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { TOPICS } from '../data/problems';
 import styles from './Problems.module.css';
@@ -13,6 +14,7 @@ const STATUS_STYLES = {
 
 export default function Problems() {
   const { problemState, setProblemStatus } = useApp();
+  const navigate = useNavigate();
   const [openTopics, setOpenTopics] = useState({});
 
   function toggleTopic(id) {
@@ -77,7 +79,13 @@ export default function Problems() {
                         className={styles.problemRow}
                         style={STATUS_STYLES[status]}
                       >
-                        <span className={styles.problemName}>{problem.name}</span>
+                        <span
+                          className={`${styles.problemName} ${styles.problemLink}`}
+                          onClick={() => navigate(`/problems/${problem.id}`)}
+                          title="Open problem"
+                        >
+                          {problem.name}
+                        </span>
                         <div className={styles.problemRight}>
                           <span className={`tag tag-${problem.difficulty}`}>{problem.difficulty}</span>
                           <span className={styles.coinBadge}>+{coins}</span>

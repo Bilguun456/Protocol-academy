@@ -19,6 +19,8 @@ import Settings from './pages/Settings';
 import About from './pages/About';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Admin from './pages/Admin';
+import ProblemDetail from './pages/ProblemDetail';
 
 function RequireAuth({ children }) {
   const { token, authLoading } = useApp();
@@ -43,10 +45,12 @@ function AnimatedRoutes() {
         <Route path="/login"    element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/about"    element={<About />} />
+        <Route path="/admin"    element={<Admin />} />
 
         {/* Protected */}
         <Route path="/" element={<RequireAuth><Home /></RequireAuth>} />
         <Route path="/problems" element={<RequireAuth><Problems /></RequireAuth>} />
+        <Route path="/problems/:id" element={<RequireAuth><ProblemDetail /></RequireAuth>} />
         <Route path="/community" element={<RequireAuth><Community /></RequireAuth>}>
           <Route path="arena"      element={<Arena />} />
           <Route path="diagnostic" element={<Diagnostic />} />

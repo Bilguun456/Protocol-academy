@@ -60,4 +60,29 @@ export const api = {
   getShopItems:  () => request('/shop/items'),
   getPurchases:  () => request('/shop/purchases'),
   purchase:      itemId => request(`/shop/purchase/${itemId}`, { method: 'POST' }),
+
+  // Problem detail
+  getProblem: id => request(`/problems/${id}`),
+
+  // Admin (uses separate password header, no JWT needed)
+  adminGetProblems: pw => fetch(`${BASE}/api/admin/problems`, {
+    headers: { 'X-Admin-Password': pw, 'Content-Type': 'application/json' },
+  }).then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error); return d; }),
+
+  adminCreateProblem: (pw, data) => fetch(`${BASE}/api/admin/problems`, {
+    method: 'POST',
+    headers: { 'X-Admin-Password': pw, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  }).then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error); return d; }),
+
+  adminUpdateProblem: (pw, id, data) => fetch(`${BASE}/api/admin/problems/${id}`, {
+    method: 'PUT',
+    headers: { 'X-Admin-Password': pw, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  }).then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error); return d; }),
+
+  adminDeleteProblem: (pw, id) => fetch(`${BASE}/api/admin/problems/${id}`, {
+    method: 'DELETE',
+    headers: { 'X-Admin-Password': pw, 'Content-Type': 'application/json' },
+  }).then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error); return d; }),
 };

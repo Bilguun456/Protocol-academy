@@ -172,4 +172,15 @@ router.put('/:id/status', requireAuth, async (req, res) => {
   }
 });
 
+router.get('/:id', requireAuth, async (req, res) => {
+  try {
+    const problem = (await pool.query('SELECT * FROM problems WHERE id = $1', [req.params.id])).rows[0];
+    if (!problem) return res.status(404).json({ error: 'Problem not found' });
+    res.json({ problem });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 export default router;

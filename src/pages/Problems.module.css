@@ -52,6 +52,8 @@
 .problemRow:hover { filter: brightness(0.97); }
 
 .problemName { flex: 1; font-size: 13px; color: var(--text-dim); }
+.problemLink { cursor: pointer; }
+.problemLink:hover { color: var(--accent); text-decoration: underline; }
 
 .problemRight {
   display: flex;

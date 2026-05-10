@@ -127,6 +127,154 @@ try {
     );
   }
 
+  // Seed 10 starter problems with full content
+  const FULL_PROBLEMS = [
+    {
+      id: 'p1',
+      category: 'Introductory',
+      statement: `Consider an algorithm that takes as input a positive integer n. If n is even, the algorithm divides it by two. If n is odd, the algorithm multiplies it by three and adds one. The algorithm repeats this, until n is one.
+
+For example, the sequence for n = 3 is as follows:
+3 → 10 → 5 → 16 → 8 → 4 → 2 → 1
+
+Your task is to simulate the algorithm for a given value of n.`,
+      input_format: 'The only input line contains a single integer n.',
+      output_format: 'Print a line that contains all values of n during the algorithm.',
+      constraints_text: '1 ≤ n ≤ 10^6',
+      sample_input: '3',
+      sample_output: '3 10 5 16 8 4 2 1',
+      explanation: 'Starting from 3: since 3 is odd, compute 3×3+1=10. Since 10 is even, divide by 2 to get 5. Continue this process until reaching 1.',
+    },
+    {
+      id: 'p2',
+      category: 'Introductory',
+      statement: `You are given all numbers between 1, 2, ..., n except one. Your task is to find the missing number.`,
+      input_format: 'The first input line contains an integer n. The second line contains n−1 numbers in arbitrary order. Each number is distinct and between 1 and n (inclusive).',
+      output_format: 'Print the missing number.',
+      constraints_text: '2 ≤ n ≤ 2×10^5',
+      sample_input: '5\n2 3 1 5',
+      sample_output: '4',
+      explanation: 'The numbers 1 through 5 should all appear. The number 4 is absent from the list.',
+    },
+    {
+      id: 'p11',
+      category: 'Sorting & Searching',
+      statement: `You are given a list of n integers, and your task is to calculate the number of distinct values in the list.`,
+      input_format: 'The first input line has an integer n: the number of values. The second line has n integers x1, x2, ..., xn.',
+      output_format: 'Print one integer: the number of distinct values.',
+      constraints_text: '1 ≤ n ≤ 2×10^5\n1 ≤ xi ≤ 10^9',
+      sample_input: '5\n2 3 2 2 3',
+      sample_output: '2',
+      explanation: 'The only distinct values present are 2 and 3, so the answer is 2.',
+    },
+    {
+      id: 'p13',
+      category: 'Sorting & Searching',
+      statement: `There are n children who want to go to a Ferris wheel, and your task is to find a gondola for each child.
+
+Each gondola may have one or two children in it, and in addition, the total weight in a gondola may not exceed x. You know the weight of every child.
+
+What is the minimum number of gondolas needed for the children?`,
+      input_format: 'The first input line contains two integers n and x: the number of children and the maximum allowed weight per gondola. The next line contains n integers p1, p2, ..., pn: the weight of each child.',
+      output_format: 'Print one integer: the minimum number of gondolas.',
+      constraints_text: '1 ≤ n ≤ 2×10^5\n1 ≤ x ≤ 10^9\n1 ≤ pi ≤ x',
+      sample_input: '4 10\n7 2 3 9',
+      sample_output: '3',
+      explanation: 'Sort weights: [2, 3, 7, 9]. Pair the lightest (2) with the heaviest that fits (7): 2+7=9 ≤ 10, one gondola. Remaining: 3 and 9. Since 3+9=12 > 10, each needs its own gondola. Total: 3 gondolas.',
+    },
+    {
+      id: 'p21',
+      category: 'DP',
+      statement: `Your task is to count the number of ways to construct sum n by throwing a dice one or more times. Each throw produces a number between 1 and 6 (inclusive). The order of throws matters — different orderings count as different ways.
+
+For example, there are 8 ways to construct sum 4:
+1+1+1+1, 1+1+2, 1+2+1, 2+1+1, 2+2, 1+3, 3+1, 4`,
+      input_format: 'The only input line has a single integer n.',
+      output_format: 'Print the number of ways modulo 10^9+7.',
+      constraints_text: '1 ≤ n ≤ 10^6',
+      sample_input: '3',
+      sample_output: '4',
+      explanation: 'The four ordered ways to get sum 3 are: 1+1+1, 1+2, 2+1, and 3.',
+    },
+    {
+      id: 'p22',
+      category: 'DP',
+      statement: `Consider a money system consisting of n coins. Each coin has a positive integer value. Your task is to produce a sum of money x using the available coin denominations such that the number of coins is minimized.
+
+You may use each coin denomination as many times as you wish (unlimited supply).`,
+      input_format: 'The first input line has two integers n and x: the number of coin denominations and the required sum. The second line has n distinct integers c1, c2, ..., cn: the coin values.',
+      output_format: 'Print the minimum number of coins. If it is not possible to produce the sum x, print -1.',
+      constraints_text: '1 ≤ n ≤ 100\n1 ≤ x ≤ 10^6\n1 ≤ ci ≤ 10^6',
+      sample_input: '3 11\n1 5 7',
+      sample_output: '3',
+      explanation: 'Use coin 5 twice and coin 1 once: 5+5+1 = 11, which requires 3 coins. No combination uses fewer coins.',
+    },
+    {
+      id: 'p31',
+      category: 'Graph Algorithms',
+      statement: `You are given a map of a building, and your task is to count the number of its rooms. The size of the map is n×m, and each square is either floor (.) or wall (#).
+
+You can move to an adjacent square horizontally or vertically (up, down, left, right). Two floor squares belong to the same room if you can reach one from the other by moving through floor squares.
+
+What is the total number of rooms?`,
+      input_format: 'The first input line has two integers n and m: the height and width of the map. Then there are n lines each containing m characters, where each character is either \'.\' (floor) or \'#\' (wall).',
+      output_format: 'Print one integer: the number of rooms.',
+      constraints_text: '1 ≤ n, m ≤ 1000',
+      sample_input: '5 8\n########\n#..#...#\n####.###\n#...#..#\n########',
+      sample_output: '3',
+      explanation: 'There are three separate connected regions of floor tiles: one in the top area, one through the middle passage, and one in the bottom-right area.',
+    },
+    {
+      id: 'p41',
+      category: 'Range Queries',
+      statement: `Given an array of n integers, your task is to process q queries of the form: what is the sum of values in range [a, b]?
+
+Queries must be answered efficiently using prefix sums.`,
+      input_format: 'The first input line has two integers n and q: the size of the array and the number of queries. The second line has n integers x1, x2, ..., xn: the array values (1-indexed). Then there are q lines, each with two integers a and b: the inclusive range for the query.',
+      output_format: 'For each query, print the sum of values in range [a, b] on its own line.',
+      constraints_text: '1 ≤ n, q ≤ 2×10^5\n1 ≤ a ≤ b ≤ n\n1 ≤ xi ≤ 10^9',
+      sample_input: '5 3\n1 3 4 8 6\n2 4\n1 3\n3 5',
+      sample_output: '15\n8\n18',
+      explanation: 'Query [2,4]: 3+4+8=15. Query [1,3]: 1+3+4=8. Query [3,5]: 4+8+6=18. Build a prefix sum array for O(1) per query.',
+    },
+    {
+      id: 'p59',
+      category: 'Mathematics',
+      statement: `Your task is to efficiently calculate values a^b modulo 10^9+7.
+
+Since b can be very large (up to 10^9), you cannot multiply a by itself b times directly. Instead, use fast exponentiation (also called binary exponentiation or exponentiation by squaring), which runs in O(log b) time.`,
+      input_format: 'The first input line has an integer n: the number of calculations. After this, there are n lines, each containing two integers a and b.',
+      output_format: 'For each pair, print a^b mod (10^9+7) on its own line.',
+      constraints_text: '1 ≤ n ≤ 2×10^5\n1 ≤ a ≤ 10^9\n0 ≤ b ≤ 10^9',
+      sample_input: '3\n3 4\n2 10\n9999 0',
+      sample_output: '81\n1024\n1',
+      explanation: '3^4 = 81. 2^10 = 1024. Any number to the power 0 equals 1. Use the identity a^b = (a^(b/2))^2 when b is even, and a^b = a × a^(b-1) when b is odd.',
+    },
+    {
+      id: 'p38',
+      category: 'Graph Algorithms',
+      statement: `There are n cities and m one-directional (directed) flight connections between them. Your task is to determine the length of the shortest route from city 1 to every other city.
+
+Use Dijkstra's algorithm for efficient computation.`,
+      input_format: 'The first input line has two integers n and m: the number of cities and flights. After this, there are m lines describing the flights. Each line has three integers a, b, and c: a flight starts at city a, ends at city b, and its travel time (cost) is c.',
+      output_format: 'Print n space-separated integers: the shortest distances from city 1 to cities 1, 2, ..., n. If a city cannot be reached from city 1, print -1 for that city.',
+      constraints_text: '1 ≤ n ≤ 10^5\n1 ≤ m ≤ 2×10^5\n1 ≤ a, b ≤ n\n1 ≤ c ≤ 10^9',
+      sample_input: '3 4\n1 2 6\n1 3 2\n3 2 3\n1 3 4',
+      sample_output: '0 5 2',
+      explanation: 'Distance from 1 to 1 is 0. Shortest path 1→2: go via city 3, cost 2+3=5 (direct path costs 6). Shortest path 1→3: direct, cost 2.',
+    },
+  ];
+
+  for (const p of FULL_PROBLEMS) {
+    await client.query(
+      `UPDATE problems
+       SET category=$1, input_format=$2, output_format=$3, constraints_text=$4,
+           sample_input=$5, sample_output=$6, explanation=$7, statement=$8
+       WHERE id=$9`,
+      [p.category, p.input_format, p.output_format, p.constraints_text, p.sample_input, p.sample_output, p.explanation, p.statement, p.id]
+    );
+  }
+
   for (const n of NEWS) {
     await client.query(
       `INSERT INTO news (id, title, description, tag, type, date)
@@ -168,7 +316,7 @@ try {
   }
 
   await client.query('COMMIT');
-  console.log(`Seed complete — ${PROBLEMS.length} problems, ${NEWS.length} news, ${SHOP_ITEMS.length} shop items, ${DEMO_USERS.length} demo users`);
+  console.log(`Seed complete — ${PROBLEMS.length} problems (10 with full content), ${NEWS.length} news, ${SHOP_ITEMS.length} shop items, ${DEMO_USERS.length} demo users`);
 } catch (err) {
   await client.query('ROLLBACK');
   console.error('Seed failed:', err);
