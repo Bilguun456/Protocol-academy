@@ -118,6 +118,19 @@ const SCHEMA = [
     purchased_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (user_id, item_id)
   )`,
+  `CREATE TABLE IF NOT EXISTS submissions (
+    id          SERIAL PRIMARY KEY,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    problem_id  TEXT    NOT NULL,
+    language_id INTEGER NOT NULL,
+    code        TEXT    NOT NULL,
+    verdict     TEXT    NOT NULL,
+    stdout      TEXT    NOT NULL DEFAULT '',
+    stderr      TEXT    NOT NULL DEFAULT '',
+    time_ms     REAL,
+    memory_kb   INTEGER,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )`,
 ];
 
 for (const sql of SCHEMA) {

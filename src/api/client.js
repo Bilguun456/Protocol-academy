@@ -64,6 +64,9 @@ export const api = {
   // Problem detail
   getProblem: id => request(`/problems/${id}`),
 
+  // Submissions
+  submit: data => request('/submissions', { method: 'POST', body: JSON.stringify(data) }),
+
   // Admin (uses separate password header, no JWT needed)
   adminGetProblems: pw => fetch(`${BASE}/api/admin/problems`, {
     headers: { 'X-Admin-Password': pw, 'Content-Type': 'application/json' },

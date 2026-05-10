@@ -5,13 +5,30 @@ import { api } from '../api/client';
 import styles from './ProblemDetail.module.css';
 
 const COIN_MAP = { easy: 10, medium: 25, hard: 50 };
-const LANGUAGES = ['C++', 'Python', 'Java'];
+
+const LANG_OPTIONS = [
+  { label: 'C++',    id: 54 },
+  { label: 'Python', id: 71 },
+  { label: 'Java',   id: 62 },
+];
 
 const STARTER_CODE = {
-  'C++':    '#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios_base::sync_with_stdio(false);\n    cin.tie(NULL);\n    \n    // your code here\n    \n    return 0;\n}',
-  'Python': 'import sys\ninput = sys.stdin.readline\n\ndef main():\n    # your code here\n    pass\n\nmain()',
-  'Java':   'import java.util.*;\nimport java.io.*;\n\npublic class Main {\n    public static void main(String[] args) throws IOException {\n        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));\n        // your code here\n    }\n}',
+  54: '#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios_base::sync_with_stdio(false);\n    cin.tie(NULL);\n    \n    // your code here\n    \n    return 0;\n}',
+  71: 'import sys\ninput = sys.stdin.readline\n\ndef main():\n    # your code here\n    pass\n\nmain()',
+  62: 'import java.util.*;\nimport java.io.*;\n\npublic class Main {\n    public static void main(String[] args) throws IOException {\n        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));\n        // your code here\n    }\n}',
 };
+
+const VERDICT_META = {
+  'Accepted':             { color: 'var(--green)', bg: 'rgba(22,163,74,0.08)',  icon: '✓' },
+  'Wrong Answer':         { color: 'var(--red)',   bg: 'rgba(220,38,38,0.08)',  icon: '✗' },
+  'Time Limit Exceeded':  { color: '#d97706',      bg: 'rgba(217,119,6,0.08)', icon: '⏱' },
+  'Compilation Error':    { color: 'var(--red)',   bg: 'rgba(220,38,38,0.08)',  icon: '⚠' },
+  'Runtime Error':        { color: 'var(--red)',   bg: 'rgba(220,38,38,0.08)',  icon: '💥' },
+};
+
+function verdictMeta(v) {
+  return VERDICT_META[v] ?? { color: '#6b7a8d', bg: 'rgba(107,122,141,0.08)', icon: '?' };
+}
 
 function Confetti() {
   const pieces = useRef(
@@ -22,25 +39,15 @@ function Confetti() {
       duration: `${(1.8 + Math.random() * 1.8).toFixed(2)}s`,
       color: ['#00c853', '#1a7fd4', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'][i % 6],
       size: `${7 + Math.floor(Math.random() * 8)}px`,
-      rotate: Math.random() > 0.5 ? 'rotate(45deg)' : 'rotate(0deg)',
     }))
   );
   return (
     <div className={styles.confettiWrap} aria-hidden="true">
       {pieces.current.map(p => (
-        <div
-          key={p.id}
-          className={styles.confettiPiece}
-          style={{
-            left: p.left,
-            animationDelay: p.delay,
-            animationDuration: p.duration,
-            background: p.color,
-            width: p.size,
-            height: p.size,
-            transform: p.rotate,
-          }}
-        />
+        <div key={p.id} className={styles.confettiPiece} style={{
+          left: p.left, animationDelay: p.delay, animationDuration: p.duration,
+          background: p.color, width: p.size, height: p.size,
+        }} />
       ))}
     </div>
   );
@@ -49,46 +56,55 @@ function Confetti() {
 export default function ProblemDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { problemState, setProblemStatus, user } = useApp();
+  const { problemState, setProblemStatus, setUser } = useApp();
 
-  const [problem, setProblem] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [problem, setProblem]       = useState(null);
+  const [loading, setLoading]       = useState(true);
+  const [fetchErr, setFetchErr]     = useState('');
 
-  const [lang, setLang] = useState('C++');
-  const [code, setCode] = useState(STARTER_CODE['C++']);
-  const [dialog, setDialog] = useState(null); // null | 'ask' | 'correct' | 'wrong'
+  const [langId, setLangId]         = useState(54);
+  const [code, setCode]             = useState(STARTER_CODE[54]);
+
+  const [submitting, setSubmitting] = useState(false);
+  const [submitErr, setSubmitErr]   = useState('');
+  const [result, setResult]         = useState(null); // { verdict, stdout, stderr, time, memory, accepted, coins }
   const [showConfetti, setShowConfetti] = useState(false);
-  const [coinsEarned, setCoinsEarned] = useState(0);
 
   useEffect(() => {
     setLoading(true);
     api.getProblem(id)
-      .then(d => { setProblem(d.problem); setError(''); })
-      .catch(err => setError(err.message || 'Problem not found'))
+      .then(d => { setProblem(d.problem); setFetchErr(''); })
+      .catch(err => setFetchErr(err.message || 'Problem not found'))
       .finally(() => setLoading(false));
   }, [id]);
 
-  function handleLangChange(newLang) {
-    setLang(newLang);
-    setCode(STARTER_CODE[newLang]);
+  function handleLangChange(id) {
+    setLangId(id);
+    setCode(STARTER_CODE[id]);
+    setResult(null);
+    setSubmitErr('');
   }
 
-  function handleSubmit() {
-    setDialog('ask');
-  }
-
-  async function handleVerdict(passed) {
-    setDialog(null);
-    if (passed) {
-      const coins = COIN_MAP[problem.difficulty] || 10;
-      setCoinsEarned(coins);
-      await setProblemStatus(problem.id, 'solved');
-      setShowConfetti(true);
-      setDialog('correct');
-      setTimeout(() => setShowConfetti(false), 4000);
-    } else {
-      setDialog('wrong');
+  async function handleSubmit() {
+    if (!code.trim() || submitting) return;
+    setSubmitting(true);
+    setResult(null);
+    setSubmitErr('');
+    try {
+      const data = await api.submit({ code, language_id: langId, problem_id: problem.id });
+      setResult(data);
+      if (data.accepted) {
+        // Sync coins into context if server returned new total
+        if (data.coins != null) setUser(u => ({ ...u, coins: data.coins }));
+        // Update local problem state
+        await setProblemStatus(problem.id, 'solved');
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 4000);
+      }
+    } catch (err) {
+      setSubmitErr(err.message || 'Submission failed');
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -100,9 +116,9 @@ export default function ProblemDetail() {
     </div>
   );
 
-  if (error || !problem) return (
+  if (fetchErr || !problem) return (
     <div className="page-container" style={{ textAlign: 'center', paddingTop: 60 }}>
-      <div style={{ color: 'var(--red)', fontSize: 13, marginBottom: 16 }}>{error || 'Problem not found'}</div>
+      <div style={{ color: 'var(--red)', fontSize: 13, marginBottom: 16 }}>{fetchErr || 'Problem not found'}</div>
       <button className="btn" onClick={() => navigate('/problems')}>← Back to Problems</button>
     </div>
   );
@@ -134,7 +150,7 @@ export default function ProblemDetail() {
         <div className={styles.noContent}>
           <p>Full problem statement coming soon.</p>
           <p style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)' }}>
-            This problem can still be marked as solved below once you've worked it out.
+            You can still write and test your code below — submit once the statement is available.
           </p>
         </div>
       ) : (
@@ -145,28 +161,24 @@ export default function ProblemDetail() {
               <div className={styles.prose}>{problem.statement}</div>
             </section>
           )}
-
           {problem.input_format && (
             <section className={styles.section}>
               <h2 className={styles.sectionTitle}>Input</h2>
               <div className={styles.prose}>{problem.input_format}</div>
             </section>
           )}
-
           {problem.output_format && (
             <section className={styles.section}>
               <h2 className={styles.sectionTitle}>Output</h2>
               <div className={styles.prose}>{problem.output_format}</div>
             </section>
           )}
-
           {problem.constraints_text && (
             <section className={styles.section}>
               <h2 className={styles.sectionTitle}>Constraints</h2>
               <div className={styles.prose}>{problem.constraints_text}</div>
             </section>
           )}
-
           {(problem.sample_input || problem.sample_output) && (
             <section className={styles.section}>
               <h2 className={styles.sectionTitle}>Example</h2>
@@ -182,7 +194,6 @@ export default function ProblemDetail() {
               </div>
             </section>
           )}
-
           {problem.explanation && (
             <section className={styles.section}>
               <h2 className={styles.sectionTitle}>Explanation</h2>
@@ -197,13 +208,14 @@ export default function ProblemDetail() {
         <div className={styles.editorHeader}>
           <span className={styles.sectionTitle} style={{ margin: 0 }}>Your Solution</span>
           <div className={styles.langTabs}>
-            {LANGUAGES.map(l => (
+            {LANG_OPTIONS.map(l => (
               <button
-                key={l}
-                className={`${styles.langTab} ${lang === l ? styles.langTabActive : ''}`}
-                onClick={() => handleLangChange(l)}
+                key={l.id}
+                className={`${styles.langTab} ${langId === l.id ? styles.langTabActive : ''}`}
+                onClick={() => handleLangChange(l.id)}
+                disabled={submitting}
               >
-                {l}
+                {l.label}
               </button>
             ))}
           </div>
@@ -215,65 +227,78 @@ export default function ProblemDetail() {
           spellCheck={false}
           autoCorrect="off"
           autoCapitalize="off"
+          disabled={submitting}
         />
         <div className={styles.editorFooter}>
-          {status === 'solved' && (
+          {status === 'solved' && !result && (
             <span className={styles.alreadySolved}>✓ Already solved — +{COIN_MAP[problem.difficulty]} coins earned</span>
           )}
-          <button className="btn btn-accent" onClick={handleSubmit} style={{ marginLeft: 'auto' }}>
-            Submit Solution
+          {submitErr && (
+            <span className={styles.submitErr}>{submitErr}</span>
+          )}
+          <button
+            className={`btn btn-accent ${styles.submitBtn}`}
+            onClick={handleSubmit}
+            disabled={submitting || !code.trim()}
+          >
+            {submitting ? (
+              <><span className={styles.spinner} /> Judging…</>
+            ) : 'Submit Solution'}
           </button>
         </div>
       </div>
 
-      {/* Dialog overlay */}
-      {dialog && (
-        <div className={styles.overlay} onClick={() => dialog !== 'ask' && setDialog(null)}>
-          <div className={styles.modal} onClick={e => e.stopPropagation()}>
-            {dialog === 'ask' && (
-              <>
-                <div className={styles.modalTitle}>Submit Solution</div>
-                <p className={styles.modalText}>
-                  Run your code against the sample cases above, then answer honestly:
-                </p>
-                <p className={styles.modalQuestion}>Did your solution pass all test cases?</p>
-                <div className={styles.modalActions}>
-                  <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => handleVerdict(false)}>
-                    No — it failed
-                  </button>
-                  <button className="btn btn-accent" style={{ flex: 1 }} onClick={() => handleVerdict(true)}>
-                    Yes — all passed!
-                  </button>
-                </div>
-              </>
-            )}
+      {/* Verdict panel */}
+      {result && (
+        <VerdictPanel result={result} difficulty={problem.difficulty} />
+      )}
+    </div>
+  );
+}
 
-            {dialog === 'correct' && (
-              <>
-                <div className={styles.modalEmoji}>🎉</div>
-                <div className={styles.modalTitle}>Correct!</div>
-                <p className={styles.modalText}>
-                  Great job! You earned <strong>+{coinsEarned} coins</strong>.
-                </p>
-                <button className="btn btn-accent" style={{ width: '100%' }} onClick={() => setDialog(null)}>
-                  Continue
-                </button>
-              </>
-            )}
+function VerdictPanel({ result, difficulty }) {
+  const { verdict, stdout, stderr, time, memory, accepted, coins } = result;
+  const meta = verdictMeta(verdict);
+  const [showOutput, setShowOutput] = useState(true);
 
-            {dialog === 'wrong' && (
-              <>
-                <div className={styles.modalEmoji}>💪</div>
-                <div className={styles.modalTitle}>Keep Going!</div>
-                <p className={styles.modalText}>
-                  No worries — debugging is part of the process. Read the constraints carefully, check your edge cases, and try again. You've got this!
-                </p>
-                <button className="btn btn-accent" style={{ width: '100%' }} onClick={() => setDialog(null)}>
-                  Back to coding
-                </button>
-              </>
-            )}
-          </div>
+  return (
+    <div className={styles.verdictPanel} style={{ borderColor: meta.color, background: meta.bg }}>
+      <div className={styles.verdictHeader}>
+        <span className={styles.verdictBadge} style={{ color: meta.color }}>
+          {meta.icon} {verdict}
+        </span>
+        <div className={styles.verdictStats}>
+          {time != null && (
+            <span className={styles.stat}>⏱ {(time * 1000).toFixed(0)} ms</span>
+          )}
+          {memory != null && (
+            <span className={styles.stat}>📦 {(memory / 1024).toFixed(1)} MB</span>
+          )}
+          {accepted && coins != null && (
+            <span className={styles.coinStat}>+{COIN_MAP[difficulty]} coins earned!</span>
+          )}
+        </div>
+      </div>
+
+      {accepted && (
+        <div className={styles.acceptedMsg}>
+          Great work! Your solution passed all test cases.
+        </div>
+      )}
+
+      {(stdout || stderr) && (
+        <div className={styles.outputSection}>
+          <button
+            className={styles.outputToggle}
+            onClick={() => setShowOutput(v => !v)}
+          >
+            {showOutput ? '▼' : '▶'} {stderr ? 'Compiler / Error Output' : 'Program Output'}
+          </button>
+          {showOutput && (
+            <pre className={styles.outputBlock}>
+              {stderr || stdout || '(no output)'}
+            </pre>
+          )}
         </div>
       )}
     </div>

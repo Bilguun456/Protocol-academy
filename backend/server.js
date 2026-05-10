@@ -16,6 +16,7 @@ import dailyTaskRoutes from './routes/dailyTasks.js';
 import newsRoutes from './routes/news.js';
 import shopRoutes from './routes/shop.js';
 import adminRoutes from './routes/admin.js';
+import submissionRoutes from './routes/submissions.js';
 import { ADMIN_HTML } from './adminPage.js';
 
 const app = express();
@@ -39,6 +40,7 @@ app.use('/api/daily-tasks', dailyTaskRoutes);
 app.use('/api/news',        newsRoutes);
 app.use('/api/shop',        shopRoutes);
 app.use('/api/admin',       adminRoutes);
+app.use('/api/submissions', submissionRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);
