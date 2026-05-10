@@ -4,46 +4,44 @@ import { requireAuth } from '../middleware/auth.js';
 
 const router = Router();
 
-const PISTON_URL = 'https://emkc.org/api/v2/piston/execute';
+const GLOT_BASE = 'https://glot.io/api/run';
 
-// Judge0 language_id -> Piston language name
+// Judge0 language_id -> [glot language, filename]
 const LANG_MAP = {
-  54: 'cpp',
-  71: 'python',
-  62: 'java',
+  54: ['cpp',    'main.cpp'],
+  71: ['python', 'main.py'],
+  62: ['java',   'Main.java'],
 };
 
-const COIN_MAP       = { easy: 10, medium: 25, hard: 50 };
+const COIN_MAP        = { easy: 10, medium: 25, hard: 50 };
 const SOLVE_EASY_TASK = { id: 'solve_easy', reward: 15 };
 
 function todayKey() { return new Date().toDateString(); }
 
-async function runPiston(language, code, stdin) {
-  const res = await fetch(PISTON_URL, {
+async function runGlot(language, filename, code, stdin) {
+  const res = await fetch(`${GLOT_BASE}/${language}/latest`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      language,
-      version: '*',
-      files: [{ content: code }],
+      files: [{ name: filename, content: code }],
       stdin: stdin ?? '',
     }),
   });
 
   const raw = await res.text();
   if (!res.ok) {
-    console.error('Piston error — HTTP', res.status, raw);
-    throw Object.assign(new Error('Piston request failed'), { status: res.status, body: raw });
+    console.error('Glot error — HTTP', res.status, raw);
+    throw Object.assign(new Error('Glot request failed'), { status: res.status, body: raw });
   }
 
   return JSON.parse(raw);
 }
 
-// GET /api/submissions/test — smoke-test Piston with a Python hello-world
+// GET /api/submissions/test — smoke-test Glot with a Python hello-world
 router.get('/test', async (req, res) => {
   try {
-    const result = await runPiston('python', 'print("hello")', '');
-    console.log('Piston test result:', result);
+    const result = await runGlot('python', 'main.py', 'print("hello")', '');
+    console.log('Glot test result:', result);
     res.json({ ok: true, result });
   } catch (err) {
     res.status(502).json({ ok: false, error: err.message, body: err.body });
@@ -57,36 +55,33 @@ router.post('/', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'code, language_id, and problem_id are required' });
     }
 
-    const pistonLang = LANG_MAP[Number(language_id)];
-    if (!pistonLang) {
+    const langEntry = LANG_MAP[Number(language_id)];
+    if (!langEntry) {
       return res.status(400).json({ error: `Unsupported language_id: ${language_id}` });
     }
+    const [glotLang, filename] = langEntry;
 
     const problem = (await pool.query('SELECT * FROM problems WHERE id = $1', [problem_id])).rows[0];
     if (!problem) return res.status(404).json({ error: 'Problem not found' });
 
-    // ── 1. Execute via Piston ───────────────────────────────────────────────
-    let pistonResult;
+    // ── 1. Execute via Glot ─────────────────────────────────────────────────
+    let glotResult;
     try {
-      pistonResult = await runPiston(pistonLang, code, problem.sample_input || '');
+      glotResult = await runGlot(glotLang, filename, code, problem.sample_input || '');
     } catch (err) {
       return res.status(502).json({ error: 'Code execution failed', detail: err.message });
     }
 
-    const run    = pistonResult.run ?? {};
-    const stdout = (run.stdout ?? '').trimEnd();
-    const stderr = (run.stderr ?? '') + (pistonResult.compile?.stderr ?? '');
-    const exitCode = run.code ?? run.exit_code ?? 1;
+    const stdout = (glotResult.stdout ?? '').trimEnd();
+    const stderr = (glotResult.stderr ?? '').trimEnd();
 
-    console.log('Piston run — lang:', pistonLang, 'exit:', exitCode, 'stdout:', stdout.slice(0, 200));
+    console.log('Glot run — lang:', glotLang, 'stdout:', stdout.slice(0, 200), 'stderr:', stderr.slice(0, 200));
 
     // ── 2. Determine verdict ────────────────────────────────────────────────
     const expected = (problem.sample_output ?? '').trimEnd();
     let verdict;
-    if (exitCode !== 0) {
-      verdict = stderr.includes('error:') || pistonResult.compile?.code !== 0
-        ? 'Compilation Error'
-        : 'Runtime Error';
+    if (stderr && !stdout) {
+      verdict = 'Compilation Error';
     } else {
       verdict = stdout === expected ? 'Accepted' : 'Wrong Answer';
     }
