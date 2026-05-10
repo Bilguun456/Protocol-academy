@@ -28,6 +28,45 @@ function todayKey() { return new Date().toDateString(); }
 function b64(s)     { return Buffer.from(s ?? '').toString('base64'); }
 function unb64(s)   { return s ? Buffer.from(s, 'base64').toString('utf8') : ''; }
 
+// GET /api/submissions/test — smoke-test the Judge0 connection
+router.get('/test', async (req, res) => {
+  const apiKey = process.env.JUDGE0_API_KEY;
+  if (!apiKey) return res.status(503).json({ error: 'JUDGE0_API_KEY not set' });
+
+  try {
+    const testRes = await fetch(`${JUDGE0_HOST}/submissions?base64_encoded=true&wait=true`, {
+      method: 'POST',
+      headers: {
+        'Content-Type':    'application/json',
+        'X-RapidAPI-Key':  apiKey,
+        'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com',
+      },
+      body: JSON.stringify({
+        source_code:  b64('print("hello")'),
+        language_id:  71, // Python 3
+        stdin:        b64(''),
+      }),
+    });
+
+    const raw = await testRes.text();
+    console.log('Judge0 test response status:', testRes.status);
+    console.log('Judge0 test response body:', raw);
+
+    let parsed;
+    try { parsed = JSON.parse(raw); } catch { parsed = null; }
+
+    res.json({
+      judge0_status: testRes.status,
+      judge0_ok: testRes.ok,
+      judge0_headers: Object.fromEntries(testRes.headers.entries()),
+      judge0_body: parsed ?? raw,
+    });
+  } catch (err) {
+    console.error('Judge0 test fetch error:', err);
+    res.status(502).json({ error: err.message });
+  }
+});
+
 router.post('/', requireAuth, async (req, res) => {
   try {
     const { code, language_id, problem_id } = req.body;
@@ -42,29 +81,48 @@ router.post('/', requireAuth, async (req, res) => {
     if (!apiKey) return res.status(503).json({ error: 'Code execution not configured (JUDGE0_API_KEY missing)' });
 
     // ── 1. Create submission ────────────────────────────────────────────────
-    const createRes = await fetch(`${JUDGE0_HOST}/submissions?base64_encoded=true&wait=false`, {
+    const submitUrl = `${JUDGE0_HOST}/submissions?base64_encoded=true&wait=false`;
+    const submitBody = {
+      source_code:     b64(code),
+      language_id:     Number(language_id),
+      stdin:           b64(problem.sample_input || ''),
+      expected_output: b64((problem.sample_output || '').trim()),
+    };
+    console.log('Judge0 POST', submitUrl, 'language_id:', submitBody.language_id);
+
+    const createRes = await fetch(submitUrl, {
       method: 'POST',
       headers: {
         'Content-Type':    'application/json',
         'X-RapidAPI-Key':  apiKey,
         'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com',
       },
-      body: JSON.stringify({
-        source_code:     b64(code),
-        language_id:     Number(language_id),
-        stdin:           b64(problem.sample_input || ''),
-        expected_output: b64((problem.sample_output || '').trim()),
-      }),
+      body: JSON.stringify(submitBody),
     });
 
+    const createText = await createRes.text();
     if (!createRes.ok) {
-      const txt = await createRes.text();
-      console.error('Judge0 create error:', createRes.status, txt);
-      return res.status(502).json({ error: 'Submission to judge failed' });
+      console.error('Judge0 create failed — HTTP', createRes.status);
+      console.error('Judge0 response headers:', Object.fromEntries(createRes.headers.entries()));
+      console.error('Judge0 response body:', createText);
+      return res.status(502).json({
+        error: 'Submission to judge failed',
+        judge0_status: createRes.status,
+        judge0_body: createText,
+      });
     }
 
-    const { token } = await createRes.json();
-    if (!token) return res.status(502).json({ error: 'No token returned from judge' });
+    let createJson;
+    try { createJson = JSON.parse(createText); } catch (e) {
+      console.error('Judge0 create — non-JSON response:', createText);
+      return res.status(502).json({ error: 'Judge returned non-JSON response', body: createText });
+    }
+
+    const { token } = createJson;
+    if (!token) {
+      console.error('Judge0 create — no token in response:', createJson);
+      return res.status(502).json({ error: 'No token returned from judge', body: createJson });
+    }
 
     // ── 2. Poll until done ──────────────────────────────────────────────────
     let result = null;
